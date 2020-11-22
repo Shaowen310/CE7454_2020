@@ -1,6 +1,8 @@
 # To add a new cell, type '# %%'
 # To add a new markdown cell, type '# %% [markdown]'
 # %%
+import sys
+import os
 from IPython import get_ipython
 
 # %% [markdown]
@@ -8,7 +10,6 @@ from IPython import get_ipython
 
 # %%
 # For Google Colaboratory
-import sys, os
 if 'google.colab' in sys.modules:
     # mount google drive
     from google.colab import drive
