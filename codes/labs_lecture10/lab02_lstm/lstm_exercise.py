@@ -41,8 +41,7 @@ import utils
 # * Time for 1 epoch on GPU : 10.1 sec w/ GeForce GTX 1080 Ti <br>
 
 # %%
-# device= torch.device("cuda")
-device = torch.device("cpu")
+device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 print(device)
 
 # %% [markdown]
@@ -291,3 +290,5 @@ scores, h, c = net(minibatch_data, h, c)
 print(mysentence, '... \n')
 
 utils.show_next_word(scores)
+
+# %%
