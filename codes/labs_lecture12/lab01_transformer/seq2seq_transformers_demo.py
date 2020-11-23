@@ -63,7 +63,7 @@ class Generator(nn.Module):
     "Define standard linear + softmax generation step."
 
     def __init__(self, d_model, vocab):
-        super(Generator, self).__init__()
+        super().__init__()
         self.proj = nn.Linear(d_model, vocab)
 
     def forward(self, x):
@@ -81,7 +81,7 @@ class Encoder(nn.Module):
     "Core encoder is a stack of N layers"
 
     def __init__(self, layer, N):
-        super(Encoder, self).__init__()
+        super().__init__()
         self.layers = clones(layer, N)
         self.norm = LayerNorm(layer.size)
 
@@ -97,7 +97,7 @@ class LayerNorm(nn.Module):
     "Construct a layernorm module (See citation for details)."
 
     def __init__(self, features, eps=1e-6):
-        super(LayerNorm, self).__init__()
+        super().__init__()
         self.a_2 = nn.Parameter(torch.ones(features))
         self.b_2 = nn.Parameter(torch.zeros(features))
         self.eps = eps
@@ -129,7 +129,7 @@ class EncoderLayer(nn.Module):
     "Encoder is made up of self-attn and feed forward (defined below)"
 
     def __init__(self, size, self_attn, feed_forward, dropout):
-        super(EncoderLayer, self).__init__()
+        super().__init__()
         self.self_attn = self_attn
         self.feed_forward = feed_forward
         self.sublayer = clones(SublayerConnection(size, dropout), 2)
@@ -146,7 +146,7 @@ class Decoder(nn.Module):
     "Generic N layer decoder with masking."
 
     def __init__(self, layer, N):
-        super(Decoder, self).__init__()
+        super().__init__()
         self.layers = clones(layer, N)
         self.norm = LayerNorm(layer.size)
 
@@ -161,7 +161,7 @@ class DecoderLayer(nn.Module):
     "Decoder is made of self-attn, src-attn, and feed forward (defined below)"
 
     def __init__(self, size, self_attn, src_attn, feed_forward, dropout):
-        super(DecoderLayer, self).__init__()
+        super().__init__()
         self.size = size
         self.self_attn = self_attn
         self.src_attn = src_attn
@@ -206,7 +206,7 @@ def attention(query, key, value, mask=None, dropout=None):
 class MultiHeadedAttention(nn.Module):
     def __init__(self, h, d_model, dropout=0.1):
         "Take in model size and number of heads."
-        super(MultiHeadedAttention, self).__init__()
+        super().__init__()
         assert d_model % h == 0
         # We assume d_v always equals d_k
         self.d_k = d_model // h
@@ -253,7 +253,7 @@ class PositionwiseFeedForward(nn.Module):
 # %%
 class Embeddings(nn.Module):
     def __init__(self, d_model, vocab):
-        super(Embeddings, self).__init__()
+        super().__init__()
         self.lut = nn.Embedding(vocab, d_model)
         self.d_model = d_model
 
@@ -266,7 +266,7 @@ class PositionalEncoding(nn.Module):
     "Implement the PE function."
 
     def __init__(self, d_model, dropout, max_len=5000):
-        super(PositionalEncoding, self).__init__()
+        super().__init__()
         self.dropout = nn.Dropout(p=dropout)
 
         # Compute the positional encodings once in log space.
@@ -302,10 +302,12 @@ def make_model(src_vocab, tgt_vocab, N=6, d_model=512, d_ff=2048, h=8, dropout=0
     attn = MultiHeadedAttention(h, d_model)
     ff = PositionwiseFeedForward(d_model, d_ff, dropout)
     position = PositionalEncoding(d_model, dropout)
-    model = EncoderDecoder(Encoder(EncoderLayer(d_model, c(attn), c(ff), dropout), N),
-                           Decoder(DecoderLayer(d_model, c(attn), c(attn), c(ff), dropout), N),
+    encoder = Encoder(EncoderLayer(d_model, c(attn), c(ff), dropout), N)
+    decoder = Decoder(DecoderLayer(d_model, c(attn), c(attn), c(ff), dropout), N)
+    model = EncoderDecoder(encoder, decoder,
                            nn.Sequential(Embeddings(d_model, src_vocab), c(position)),
-                           nn.Sequential(Embeddings(d_model, tgt_vocab), c(position)), Generator(d_model, tgt_vocab))
+                           nn.Sequential(Embeddings(d_model, tgt_vocab), c(position)),
+                           Generator(d_model, tgt_vocab))
 
     # This was important from their code.
     # Initialize parameters with Glorot / fan_avg.
@@ -421,7 +423,8 @@ class NoamOpt:
         "Implement `lrate` above"
         if step is None:
             step = self._step
-        return self.factor * (self.model_size**(-0.5) * min(step**(-0.5), step * self.warmup**(-1.5)))
+        return self.factor * (self.model_size**(-0.5) *
+                              min(step**(-0.5), step * self.warmup**(-1.5)))
 
 
 def get_std_opt(model):
@@ -552,7 +555,8 @@ def greedy_decode(model, src, src_mask, max_len, start_symbol):
     memory = model.encode(src, src_mask)
     ys = torch.ones(1, 1).fill_(start_symbol).type_as(src.data)
     for i in range(max_len - 1):
-        out = model.decode(memory, src_mask, Variable(ys), Variable(subsequent_mask(ys.size(1)).type_as(src.data)))
+        out = model.decode(memory, src_mask, Variable(ys),
+                           Variable(subsequent_mask(ys.size(1)).type_as(src.data)))
         prob = model.generator(out[:, -1])
         _, next_word = torch.max(prob, dim=1)
         next_word = next_word.data[0]

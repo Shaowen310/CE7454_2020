@@ -17,7 +17,8 @@ if 'google.colab' in sys.modules:
     # find automatically the path of the folder containing "file_name" :
     file_name = 'lstm_exercise.ipynb'
     import subprocess
-    path_to_file = subprocess.check_output('find . -type f -name ' + str(file_name), shell=True).decode("utf-8")
+    path_to_file = subprocess.check_output('find . -type f -name ' + str(file_name),
+                                           shell=True).decode("utf-8")
     path_to_file = path_to_file.replace(file_name, "").replace('\n', "")
     # if previous search failed or too long, comment the previous line and simply write down manually the path below :
     #path_to_file = '/content/gdrive/My Drive/CE7454_2020_codes/codes/labs_lecture10/lab02_lstm'
@@ -240,7 +241,8 @@ for epoch in range(8):
     elapsed = time.time() - start
 
     print('')
-    print('epoch=', epoch, '\t time=', elapsed, '\t lr=', my_lr, '\t exp(loss)=', math.exp(total_loss))
+    print('epoch=', epoch, '\t time=', elapsed, '\t lr=', my_lr, '\t exp(loss)=',
+          math.exp(total_loss))
     eval_on_test_set()
 
 # %% [markdown]
